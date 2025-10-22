@@ -40,7 +40,7 @@ update-locale LANG=en_US.UTF-8
 # STAR
 cd /opt
 git clone --branch 2.7.11b https://github.com/alexdobin/STAR.git
-cd STAR
+cd STAR/source
 make STAR
 cp STAR /usr/local/bin/
 
