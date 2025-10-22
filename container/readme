@@ -1,0 +1,1 @@
+apptainer build nemo_env.sif nemo_env/
