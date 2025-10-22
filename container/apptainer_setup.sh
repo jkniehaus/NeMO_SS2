@@ -66,7 +66,8 @@ if (!require("BiocManager", quietly = TRUE))
 # The following initializes usage of Bioc devel
 BiocManager::install(version='devel')
 
-BiocManager::install("edgeR")
+install.packages('Seurat')
+
 BiocManager::install("tximport")
 install.packages("tidyverse")
 quit()
