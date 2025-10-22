@@ -1,0 +1,84 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%environment
+    LANG=en_US.UTF-8
+    LC_ALL=en_US.UTF-8
+    PATH=/opt/python-3.12.2/bin:/usr/local/bin:$PATH
+
+%post
+    export DEBIAN_FRONTEND=noninteractive
+
+    # Update and install base packages
+    apt-get update && apt-get install -y \
+        build-essential \
+        curl \
+        wget \
+        git \
+        unzip \
+        ca-certificates \
+        zlib1g-dev \
+        xxd \
+        cmake \
+        libncurses-dev \
+        libbz2-dev \
+        liblzma-dev \
+        software-properties-common \
+        locales \
+        default-jdk \
+        libreadline-dev \
+        libssl-dev \
+        libffi-dev \
+        libsqlite3-dev \
+        libnss3-dev \
+        libgdbm-dev \
+        liblzma-dev \
+        uuid-dev \
+        tk-dev \
+        xz-utils \
+        gnupg \
+        libcurl4-openssl-dev
+
+    # Locale setup
+    locale-gen en_US.UTF-8
+    update-locale LANG=en_US.UTF-8
+
+    # Create UNC Longleaf mount paths
+    mkdir -p /nas/longleaf /proj /work /users /overflow /datacommons
+
+    # Install STAR 2.7.11b
+    cd /opt
+    git clone --branch 2.7.11b https://github.com/alexdobin/STAR.git
+    cd STAR/source
+    make STAR
+    cp STAR /usr/local/bin/
+
+    # Install R 4.4.0 from CRAN PPA
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9 || true
+    add-apt-repository ppa:marutter/rrutter4.0
+    apt-get update
+    apt-get install -y r-base
+
+    # Install Python 3.12.2 from source
+    cd /opt
+    wget https://www.python.org/ftp/python/3.12.2/Python-3.12.2.tgz
+    tar -xf Python-3.12.2.tgz
+    cd Python-3.12.2
+    ./configure --enable-optimizations --prefix=/opt/python-3.12.2
+    make -j$(nproc)
+    make install
+
+    # Install R packages (BiocManager, Seurat, tximport, tidyverse)
+    Rscript -e "install.packages('BiocManager', repos='https://cloud.r-project.org')"
+    Rscript -e "BiocManager::install(version='devel')"
+    Rscript -e "BiocManager::install(c('tximport'))"
+    Rscript -e "install.packages('Seurat', repos='https://cloud.r-project.org')"
+    Rscript -e "install.packages('tidyverse', repos='https://cloud.r-project.org')"
+
+%labels
+    Author YourName
+    Version 1.0
+    Description "Apptainer container with STAR, R 4.4.0, Python 3.12.2 for Longleaf SLURM workflows"
+
+%runscript
+    exec /bin/bash "$@"
