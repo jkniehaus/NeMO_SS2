@@ -16,5 +16,6 @@ workflow {
         DownloadAndPrepareFastq.batch_file,
         params.genome1,
         params.genome2,
-        DownloadAndPrepareFastq.batch_file.map { it.baseName }
+        DownloadAndPrepareFastq.batch_file.map { it.simpleName }
+    )
 }
