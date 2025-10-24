@@ -13,9 +13,4 @@ workflow {
         DownloadAndPrepareFastq
         |>
         ssAlign
-    // These outputs can now go to the STARsolo alignment step
-    DownloadAndPrepareFastq.fastq_dir
-        .combine(DownloadAndPrepareFastq.batch_file)
-        |>
-        AlignWithSTARsolo
 }
