@@ -3,7 +3,7 @@
 params.genome1 = '/proj/gs25/users/Jesse/references/mm39_exonSpecificSMARTseq'
 params.genome2 = '/proj/gs25/users/Jesse/references/mm39_starsolo_ssv4_MOR1UTR'
 
-include { DownloadAndPrepareFastq } from './modules/dlNemo.nf'
+include { dlNemo } from './modules/dlNemo.nf'
 include { ssAlign } from './modules/ssAlign.nf'
 include { MapCells } from './modules/aligned2mmc.nf'
 include { download_sra } from './modules/dlsra.nf'
