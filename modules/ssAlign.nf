@@ -26,11 +26,11 @@ process ssAlign {
         --readFilesCommand zcat \
         --outSAMtype None \
         --soloType SmartSeq \
-        --readFilesManifest ${batch_file}
+        --readFilesManifest ${batch_file} \
         --soloUMIdedup Exact \
         --soloStrand Unstranded \
         --soloFeatures GeneFull_ExonOverIntron \
-        --outFileNamePrefix ./${batch_prefix}_
+        --outFileNamePrefix ./${batch_prefix}_ \
         --outTmpDir tmp_${batch_prefix} \
         --soloMultiMappers Unique \
         --soloOutFileNames ${batch_prefix} features.tsv barcodes.tsv matrix.mtx
@@ -40,9 +40,9 @@ process ssAlign {
           --runDirPerm All_RWX \
           --readFilesCommand zcat \
           --outSAMtype None \
-          --outFileNamePrefix ./${batch_prefix}2
+          --outFileNamePrefix ./${batch_prefix}2_ \
           --soloType SmartSeq \
-          --readFilesManifest ${batch_file}
+          --readFilesManifest ${batch_file} \
           --soloUMIdedup Exact \
           --soloStrand Unstranded \
           --soloFeatures GeneFull_ExonOverIntron \
