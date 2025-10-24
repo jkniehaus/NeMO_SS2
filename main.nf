@@ -11,6 +11,7 @@ workflow {
         .map { file -> tuple(file, file.baseName) }  // e.g. ACA.txt -> ("manifests/ACA.txt", "ACA")
         |>
         DownloadAndPrepareFastq
-        |>
-        ssAlign
+    ssAlign(
+        DownloadAndPrepareFastq.fastq_dir,
+        DownloadAndPrepareFastq.batch_file,
 }
