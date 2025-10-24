@@ -20,6 +20,7 @@ process ssAlign {
     """
     set -euo pipefail
     echo "Aligning with genome 1..."
+    rm -r tmp_${batch_prefix}
     STAR --genomeDir ${genome_dir1} \
         --runThreadN 16 \
         --runDirPerm All_RWX \
@@ -30,17 +31,18 @@ process ssAlign {
         --soloUMIdedup Exact \
         --soloStrand Unstranded \
         --soloFeatures GeneFull_ExonOverIntron \
-        --outFileNamePrefix ./${batch_prefix}_ \
+        --outFileNamePrefix ./${batch_prefix}/ \ #determine whether we need its own directory
         --outTmpDir tmp_${batch_prefix} \
         --soloMultiMappers Unique \
         --soloOutFileNames ${batch_prefix} features.tsv barcodes.tsv matrix.mtx
     if [ -n "${genome_dir2}" ]; then
-      STAR --genomeDir ${genome_dir2} \
+        rm -r tmp2_${batch_prefix}
+        STAR --genomeDir ${genome_dir2} \
           --runThreadN 16 \
           --runDirPerm All_RWX \
           --readFilesCommand zcat \
           --outSAMtype None \
-          --outFileNamePrefix ./${batch_prefix}2_ \
+          --outFileNamePrefix ./${batch_prefix}_g2/ \
           --soloType SmartSeq \
           --readFilesManifest ${batch_file} \
           --soloUMIdedup Exact \
@@ -48,7 +50,7 @@ process ssAlign {
           --soloFeatures GeneFull_ExonOverIntron \
           --outTmpDir tmp2_${batch_prefix} \
           --soloMultiMappers Unique \
-          --soloOutFileNames ${batch_prefix}2 features.tsv barcodes.tsv matrix.mtx
+          --soloOutFileNames ${batch_prefix} features.tsv barcodes.tsv matrix.mtx
     fi
     """
 }
