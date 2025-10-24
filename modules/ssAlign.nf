@@ -35,6 +35,7 @@ process ssAlign {
         --outTmpDir tmp_${batch_prefix} \
         --soloMultiMappers Unique \
         --soloOutFileNames ${batch_prefix} features.tsv barcodes.tsv matrix.mtx
+    rm -r tmp_${batch_prefix}
     if [ -n "${genome_dir2}" ]; then
         rm -r tmp2_${batch_prefix}
         STAR --genomeDir ${genome_dir2} \
@@ -51,6 +52,7 @@ process ssAlign {
           --outTmpDir tmp2_${batch_prefix} \
           --soloMultiMappers Unique \
           --soloOutFileNames ${batch_prefix} features.tsv barcodes.tsv matrix.mtx
+          rm -r tmp2_${batch_prefix}
     fi
     """
 }
