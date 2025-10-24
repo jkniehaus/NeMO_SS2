@@ -2,33 +2,34 @@
 
 process DownloadAndPrepareFastq {
     tag "$sample_id"
+    cpus 2
+    time '12h'
 
     input:
     path manifest_file        // .txt file with URLs
     val sample_id             // e.g. ACA
 
     output:
-    path "fq", emit: fastq_dir
-    path "seq_batch.tsv", emit: batch_file
+    path "fq_${sample_id}", emit: fastq_dir
+    path "seq_batch_${sample_id}.tsv", emit: batch_file
 
     script:
     """
-    mkdir fq tarfiles
-    cp ${manifest_file} downloadlist.txt
-    cp downloadlist.txt tarfiles/
-
+    set -euo pipefail
+    mkdir fq_${sample_id} tarfiles_${sample_id}
+    cp ${manifest_file} tarfiles_${sample_id}/downloadlist.txt
+    cp ${manifest_file} fq_${sample_id}/downloadlist.txt
     parent=\$PWD
-
+    cd tarfiles_${sample_id}
     # Up to 5 download attempts
     for i in {1..5}; do
         if [[ \$(wc -l < downloadlist.txt) -gt 1 ]]; then
-            cd tarfiles
             xargs -P 2 -n 1 curl -O < downloadlist.txt
             echo "Untarring files"
             ls *.tar | xargs -n1 tar -xvf
-            find . -name '*.fastq.gz' -exec mv -t \$parent/fq {} +
+            find . -name '*.fastq.gz' -exec mv -t \$parent/fq_${sample_id} {} +
 
-            cd \$parent/fq
+            cd \$parent/fq_${sample_id}
 
             find * -iname "*fastq.gz" > fqs.txt
 
@@ -49,18 +50,18 @@ process DownloadAndPrepareFastq {
             done < "\${input_file}"
 
             # Construct seq_batch.tsv
-            sed 's/...........$//' < fqsUse.txt | sort | uniq | awk '{cell=\$1; print cell"R1.fastq.gz", cell"R2.fastq.gz", cell}' OFS="\\t" > seq_batch.tsv
+            sed 's/...........$//' < fqsUse.txt | sort | uniq | awk '{cell=\$1; print cell"R1.fastq.gz", cell"R2.fastq.gz", cell}' OFS="\\t" > seq_batch_${sample_id}.tsv
 
-            if [[ \$(wc -l < downloadlist.txt) == \$(wc -l < seq_batch.tsv) ]]; then
+            if [[ \$(wc -l < downloadlist.txt) == \$(wc -l < seq_batch_${sample_id}.tsv) ]]; then
                 echo "Downloads complete"
                 break
             else
                 echo "Download error: regenerating downloadlist.txt"
-                cut -f1 seq_batch.tsv > temp.txt
+                cut -f1 seq_batch_${sample_id}.tsv > temp.txt
                 sed -i 's/.\$//' temp.txt
                 grep -v -f temp.txt -i downloadlist.txt > newlist.txt
                 mv newlist.txt downloadlist.txt
-                cp downloadlist.txt tarfiles/
+                cp downloadlist.txt ${parent}/tarfiles_${sample_id}/downloadlist.txt
             fi
         fi
     done
