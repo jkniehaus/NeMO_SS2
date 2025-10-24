@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-process DownloadAndPrepareFastq {
+process dlNemo {
     tag "$sample_id"
     cpus 2
     time '12h'
