@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-process MapCells {
+process mapCells {
     tag "$batch_prefix"
     cpus 16
     memory '32 GB'
