@@ -1,8 +1,3 @@
-First create nemo_env in interactive mode. Then generate .sif file.
-apptainer build nemo_env.sif nemo_env/
-or use the singularity def
-apptainer build nemo_env.sif Singularity.def
-
-
-Then to run in a nextflow pipeline or slurm script:
-apptainer exec nemo_env.sif my_script.py
+#build environment
+apptainer build SS_env.sif Singularity.def
+ 
