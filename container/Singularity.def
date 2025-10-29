@@ -68,15 +68,20 @@ From: ubuntu:22.04
     make -j$(nproc)
     make install
 
-    # Install R packages (BiocManager, Seurat, tximport, tidyverse)
+    # Install R packages 
     Rscript -e "install.packages('BiocManager', repos='https://cloud.r-project.org')"
-    Rscript -e "BiocManager::install(version='devel')"
-    Rscript -e "BiocManager::install(c('tximport'))"
-    Rscript -e "install.packages('Seurat', repos='https://cloud.r-project.org')"
-    Rscript -e "install.packages('tidyverse', repos='https://cloud.r-project.org')"
+    Rscript -e "
+    BiocManager::install(version='devel', ask=FALSE);
+    BiocManager::install(c('tximport'), ask=FALSE);
+    install.packages('Seurat', repos='https://cloud.r-project.org');
+    install.packages('tidyverse', repos='https://cloud.r-project.org');
+    install.packages('hdf5r', repos='https://cloud.r-project.org');
+    install.packages('anndata', repos='https://cloud.r-project.org')
+    "
+
 
 %labels
-    Author YourName
+    Author Jesse Niehaus
     Version 1.0
     Description "Apptainer container with STAR, R 4.4.0, Python 3.12.2 for Longleaf SLURM workflows"
 
