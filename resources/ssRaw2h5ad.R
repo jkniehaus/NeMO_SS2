@@ -7,7 +7,7 @@ option_list = list(
   make_option(c("-o", "--prefix"), type="character", default=NULL,
               help="output file name prefix", metavar="character"),
   make_option(c("-d", "--prefix2"), type="character", default=NULL,
-              help="output file name prefix", metavar="character")
+              help="output file name prefix", metavar="character"),
 );
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
@@ -15,79 +15,22 @@ rawdir <- paste0(opt$prefix,'/',opt$prefix,'GeneFull_ExonOverIntron/raw/')
 rawdir2 <- paste0(opt$prefix2,'/',opt$prefix,'Gene/raw/')
 
 print('Loading Libraries')
+library(optparse)
 library(Seurat)
-library(dittoSeq)
-library(ggplot2)
-library(findPC)
-library(future)
-library(dplyr)
-library(HGNChelper)
-library(openxlsx)
-library('Matrix')
-library('reshape2')
-library('sctransform')
-library('knitr')
-library('ggrepel')
-library('patchwork')
-library(data.table)
-library(rhdf5)
-library(reticulate)
+library(Matrix)
 library(rtracklayer)
+library(reticulate)
 library(anndata)
-use_python('/nas/longleaf/rhel9/apps/python/3.12.2/bin/python')
-py_config()
-
-list.of.packages <- c(
-  "foreach",
-  "doParallel",
-  "ranger",
-  "palmerpenguins",
-  "tidyverse",
-  "kableExtra"
-)
-
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-
-if(length(new.packages) > 0){
-  install.packages(new.packages, dep=TRUE)
-}
-
-#loading packages
-for(package.i in list.of.packages){
-  suppressPackageStartupMessages(
-    library(
-      package.i,
-      character.only = TRUE
-    )
-  )
-}
+library(foreach)
+library(doParallel)
 
 cl<- makePSOCKcluster(opt$ncore-1)
 clusterSetRNGStream(cl)
 registerDoParallel(cl,cores=opt$ncore-1)
 
-
-knit_hooks$set(optipng = hook_optipng)
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  cache = FALSE,
-  warning = FALSE,
-  digits = 2,
-  tidy = TRUE,
-  tidy.opts = list(width.cutoff=80),
-  optipng = '-o 5 -strip all -quiet',
-  fig.width=6.5, fig.height=2.5, dpi=100, out.width = '80%'
-)
-options(dplyr.summarise.inform = FALSE)
-options(tibble.width = Inf)
-old_theme <- theme_set(theme_bw(base_size=10))
 set.seed(6646428)
 tic <- proc.time()
-
-source('/proj/gs25/users/Jesse/scripts/DSSeurat_functions_v5working.R')
-#setwd('/work/users/k/y/kylius0/raw/10x_ACA_Thal/fq/ACA_ssv4/fq/output_MOR1UTRfix070723/')
-#compress files if necessary
+#compress files if necessary; assumes unix system with gzip installed
 if (length(grep('*.gz',list.files(rawdir)))==0) {
   use <- paste0('gzip ',rawdir,'*')
   system(use)
@@ -104,8 +47,7 @@ if (dir.exists(paste0(opt$prefix2))) {
   s <- s[,colnames(s) %in% colnames(s2)]
 }
 
-
-meta=read.csv('/proj/gs25/projects/Allen_SmartSeq/U19.SS.metadat.allcol.csv',header=T,row.names=1)
+meta=read.csv('resources/U19.SS.metadat.allcol.csv',header=T,row.names=1)
 cellnames=colnames(s)
 cells=substr(cellnames,1,nchar(cellnames)-1)
 metacells=rownames(meta) #cell names of AIBS cells
@@ -171,7 +113,7 @@ s <- subset(s,subset=percent.mt<15)
 dir.create('rds')
 saveRDS(s,paste0('rds/',opt$prefix,'.rds'))
 
-gtf.file = "/proj/gs25/users/Jesse/references/annotations/Mus_musculus.GRCm39.106.ensembl.filtered.gtf"
+gtf.file = "resources/Mus_musculus.GRCm39.106.ensembl.filtered.gtf"
 gtf.gr = rtracklayer::import(gtf.file) # creates a GRanges object
 gtf.df = as.data.frame(gtf.gr)
 genes = unique(gtf.df[ ,c("gene_id","gene_name")])
