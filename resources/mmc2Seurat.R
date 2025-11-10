@@ -5,13 +5,8 @@ option_list = list(
   make_option(c("-p", "--prefix"), type = 'character', default = '',
               help='prefix for rds file', metavar='character')
 );
-#library(remotes)
-#remotes::install_github('jkniehaus/seuratHelpR')
-#library(seuratHelpR)
-source('/proj/gs25/users/Jesse/scripts/DSSeurat_functions_v5working.R')
-library(DoubletFinder)
-library(Seurat)
 library(future)
+library(Seurat)
 opt_parser = OptionParser(option_list=option_list)
 opt=parse_args(opt_parser)
 options(future.globals.maxSize = opt$mem * 1024 ^ 3)
