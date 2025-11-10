@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
-params.genome1 = '/proj/gs25/users/Jesse/references/mm39_exonSpecificSMARTseq'
-params.genome2 = '/proj/gs25/users/Jesse/references/mm39_starsolo_ssv4_MOR1UTR'
+params.genome1 = 'resources/mm39_exonSpecificSMARTseq'
+params.genome2 = 'resources/mm39_starsolo_ssv4_MOR1UTR'
 
 include { dlNemo } from './modules/dlNemo.nf'
 include { ssAlign } from './modules/ssAlign.nf'
