@@ -1,7 +1,6 @@
 #!/usr/bin/env nextflow
 
 process ssAlign {
-    scratch true
     tag "$sample_id"
     cpus 16
     memory '64 GB'
@@ -60,7 +59,7 @@ process ssAlign {
           --readFilesManifest seq_batch_${sample_id}.tsv \
           --soloUMIdedup Exact \
           --soloStrand Unstranded \
-          --soloFeatures GeneFull_ExonOverIntron \
+          --soloFeatures Gene \
           --outTmpDir tmp2_${sample_id} \
           --soloMultiMappers Unique \
           --soloOutFileNames ${sample_id} features.tsv barcodes.tsv matrix.mtx
