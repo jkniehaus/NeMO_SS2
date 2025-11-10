@@ -12,7 +12,7 @@ option_list = list(
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
 rawdir <- paste0(opt$prefix,'/',opt$prefix,'GeneFull_ExonOverIntron/raw/')
-rawdir2 <- paste0(opt$prefix2,'/',opt$prefix,'GeneFull_ExonOverIntron/raw/')
+rawdir2 <- paste0(opt$prefix2,'/',opt$prefix,'Gene/raw/')
 
 print('Loading Libraries')
 library(Seurat)
@@ -44,7 +44,7 @@ list.of.packages <- c(
   "palmerpenguins",
   "tidyverse",
   "kableExtra"
-  )
+)
 
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 
@@ -58,8 +58,8 @@ for(package.i in list.of.packages){
     library(
       package.i,
       character.only = TRUE
-      )
     )
+  )
 }
 
 cl<- makePSOCKcluster(opt$ncore-1)
@@ -85,7 +85,8 @@ old_theme <- theme_set(theme_bw(base_size=10))
 set.seed(6646428)
 tic <- proc.time()
 
-
+source('/proj/gs25/users/Jesse/scripts/DSSeurat_functions_v5working.R')
+#setwd('/work/users/k/y/kylius0/raw/10x_ACA_Thal/fq/ACA_ssv4/fq/output_MOR1UTRfix070723/')
 #compress files if necessary
 if (length(grep('*.gz',list.files(rawdir)))==0) {
   use <- paste0('gzip ',rawdir,'*')
@@ -94,13 +95,13 @@ if (length(grep('*.gz',list.files(rawdir)))==0) {
 
 s=Read10X(rawdir)
 if (dir.exists(paste0(opt$prefix2))) {
-    if (length(grep('*.gz',list.files(rawdir2)))==0) {
-        use <- paste0('gzip ',rawdir2,'*')
-        system(use)
-    }
-    s2 <- Read10X(rawdir2)
-    s2 <- s2[,colnames(s2) %in% colnames(s)]
-    s <- s[,colnames(s) %in% colnames(s2)]
+  if (length(grep('*.gz',list.files(rawdir2)))==0) {
+    use <- paste0('gzip ',rawdir2,'*')
+    system(use)
+  }
+  s2 <- Read10X(rawdir2)
+  s2 <- s2[,colnames(s2) %in% colnames(s)]
+  s <- s[,colnames(s) %in% colnames(s2)]
 }
 
 
@@ -112,28 +113,46 @@ badcells=cells[which(cells %in% metacells == FALSE)]
 metapaths=meta$fastq_path_list
 extracells=cells #for safe keeping
 print('parallel renaming')
-system.time(
-cells <- foreach(i = 1:length(extracells), .combine=c, .inorder = TRUE) %dopar%{
-        j=extracells[i]
-        if (j %in% metacells == FALSE && length(grep(j,metapaths))>0) {
-                metacells[grep(j,metapaths)]
-        } else {
-        extracells[i]
-        }
+if (opt$ncore > 2) {
+  cl <- makePSOCKcluster(opt$ncore - 1)
+  clusterSetRNGStream(cl)
+  registerDoParallel(cl, cores = opt$ncore - 1)
+
+  cells <- foreach(i = seq_along(extracells), .combine = c, .inorder = TRUE) %dopar% {
+    j <- extracells[i]
+    if (!(j %in% metacells) && any(grepl(j, metapaths, fixed = TRUE))) {
+      metacells[grep(j, metapaths, fixed = TRUE)][1]
+    } else {
+      j
+    }
+  }
+
+  message("Loop finished, number of results: ", length(cells))
+  stopCluster(cl)
+
+} else {
+  message("Running serial version, skipping cluster setup")
+  cells <- vapply(extracells, function(j) {
+    if (!(j %in% metacells) && any(grepl(j, metapaths, fixed = TRUE))) {
+      metacells[grep(j, metapaths, fixed = TRUE)][1]
+    } else {
+      j
+    }
+  }, FUN.VALUE = character(1))
+  message("Loop finished, number of results: ", length(cells))
 }
-)
 dups=cells[duplicated(cells)]
 dupnum=which(duplicated(cells))
 if (length(dups)>0) {
-print(dim(s))
-m3=s[grep(dups[1],cells),] #check if duplicates = same cell
-print(head(m3,20))
-print('after dup cell collapse gene matrix')
-s <- s[,-c(dupnum)]
-if (exists('s2')) {
+  print(dim(s))
+  m3=s[grep(dups[1],cells),] #check if duplicates = same cell
+  print(head(m3,20))
+  print('after dup cell collapse gene matrix')
+  s <- s[,-c(dupnum)]
+  if (exists('s2')) {
     s2 <- s2[,-c(dupnum)]
-}
-print(dim(s))
+  }
+  print(dim(s))
 }
 uniqcells=unique(cells)
 colnames(s)=uniqcells
@@ -143,12 +162,12 @@ s@meta.data$nCount=colSums(s[['RNA']]$counts)
 s@meta.data$nGeneFeatures=colSums(s[['RNA']]$counts > 0)
 nfeatcell=s@meta.data$nGeneFeatures
 s[["percent.mt"]] <- PercentageFeatureSet(s, pattern = "^mt-")
-s=subset(s,subset=percent.mt<15)
 if (exists('s2')) {
-   colnames(s2) <- uniqcells
-   s2 <- CreateAssayObject(s2)
-   s[['exons']] <- s2
+  colnames(s2) <- uniqcells
+  s2_assay <- CreateAssayObject(s2)
+  s[['exons']] <- s2_assay
 }
+s <- subset(s,subset=percent.mt<15)
 dir.create('rds')
 saveRDS(s,paste0('rds/',opt$prefix,'.rds'))
 
@@ -178,4 +197,5 @@ countAD <- AnnData(X   = sparse_counts,   # Create the anndata object
                    obs = data.frame(samples=samples,row.names=samples))
 print('writing h5ad')
 dir.create('h5ads')
+write_h5ad(countAD, paste0('h5ads/',opt$prefix,'.h5ad')) # Write it out as h5ad
 write_h5ad(countAD, paste0('h5ads/',opt$prefix,'.h5ad')) # Write it out as h5ad
