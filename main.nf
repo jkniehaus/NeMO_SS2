@@ -16,9 +16,8 @@ workflow {
 
     map_in_ch = align_out1_ch.join(align_out2_ch, by: 0)
                              .map { sample_id, dir1, dir2 ->
-                                 tuple(sample_id, dir1, dir2, file("${projectDir}/resources/ssRaw2h5ad.R"))
+                                 tuple(sample_id, dir1, dir2, file("${projectDir}/resources/ssRaw2h5ad.R"), file("${projectDir}/resources/mmc2Seurat.R"))
                              }
 
     mapCells(map_in_ch)
 }
-
